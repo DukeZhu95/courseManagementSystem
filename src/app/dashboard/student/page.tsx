@@ -181,10 +181,8 @@ export default function StudentDashboard() {
     router.push('/dashboard/student/timetable');
   };
 
-  // ✅ 新增：查看成就
   const viewAchievements = () => {
-    // 可以跳转到详细的成就页面，或者暂时不做任何操作
-    // router.push('/dashboard/student/achievements');
+    router.push('/dashboard/student/achievements');
   };
 
   return (
@@ -322,11 +320,6 @@ export default function StudentDashboard() {
                 <div className="glass-student-tasks-wrapper">
                   <CurrentTasks />
                 </div>
-              </section>
-
-              {/* ✅ 新增：Achievements Section */}
-              <section className="glass-student-section">
-                <Achievements />
               </section>
             </div>
           </div>

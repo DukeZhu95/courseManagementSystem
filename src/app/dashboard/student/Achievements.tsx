@@ -1,6 +1,6 @@
 /**
- * Achievements 组件
- * 显示学生获得的成就/勋章
+ * Achievements 组件 - 学生端
+ * 在学生dashboard中显示获得的成就
  */
 
 'use client';
@@ -8,97 +8,38 @@
 import { useQuery } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
 import { useUser } from '@clerk/nextjs';
-import { Award, Star, Zap, Trophy, Target, BookOpen, CheckCircle } from 'lucide-react';
+import { Award, Star, Trophy, Award as Medal, Zap, Heart, BookOpen, Lock } from 'lucide-react';
 import { useState } from 'react';
 
-interface Achievement {
-  id: string;
-  name: string;
-  description: string;
-  icon: React.ComponentType<{ className?: string }>;
-  color: string;
-  earned: boolean;
-  earnedAt?: number;
-}
+// 图标映射
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string; color?: string }>> = {
+  star: Star,
+  trophy: Trophy,
+  medal: Medal,
+  zap: Zap,
+  heart: Heart,
+  book: BookOpen,
+};
 
 export function Achievements() {
   const { user } = useUser();
   const [hoveredBadge, setHoveredBadge] = useState<string | null>(null);
 
-  // 获取学生的所有任务数据
-  const tasks = useQuery(
-    api.tasks.getStudentTasks,
-    user?.id ? { userId: user.id } : 'skip'
+  // 获取学生获得的成就
+  const earnedAchievements = useQuery(
+    api.achievements.getStudentAchievements,
+    user?.id ? { studentId: user.id } : 'skip'
   );
 
-  // 计算成就
-  const calculateAchievements = (): Achievement[] => {
-    if (!tasks) return [];
-
-    const submittedTasks = tasks.filter(t => t.isSubmitted);
-    const gradedTasks = tasks.filter(t => t.grade !== null && t.grade !== undefined);
-    const perfectScores = gradedTasks.filter(t => t.grade === 100);
-    const highScores = gradedTasks.filter(t => t.grade && t.grade >= 90);
-
-    return [
-      {
-        id: 'first-submission',
-        name: 'First Submission',
-        description: 'Submit your first assignment',
-        icon: CheckCircle,
-        color: 'from-blue-400 to-blue-600',
-        earned: submittedTasks.length > 0,
-        earnedAt: submittedTasks[0]?._creationTime,
-      },
-      {
-        id: 'top-scorer',
-        name: 'Top Scorer',
-        description: 'Get a score of 90% or higher',
-        icon: Star,
-        color: 'from-yellow-400 to-orange-500',
-        earned: highScores.length > 0,
-        earnedAt: highScores[0]?._creationTime,
-      },
-      {
-        id: 'perfectionist',
-        name: 'Perfectionist',
-        description: 'Achieve a perfect score of 100%',
-        icon: Trophy,
-        color: 'from-purple-400 to-pink-600',
-        earned: perfectScores.length > 0,
-        earnedAt: perfectScores[0]?._creationTime,
-      },
-      {
-        id: 'dedicated',
-        name: 'Dedicated',
-        description: 'Submit 5 assignments',
-        icon: Target,
-        color: 'from-green-400 to-emerald-600',
-        earned: submittedTasks.length >= 5,
-      },
-      {
-        id: 'scholar',
-        name: 'Scholar',
-        description: 'Submit 10 assignments',
-        icon: BookOpen,
-        color: 'from-cyan-400 to-blue-600',
-        earned: submittedTasks.length >= 10,
-      },
-      {
-        id: 'overachiever',
-        name: 'Overachiever',
-        description: 'Get 5 scores above 90%',
-        icon: Zap,
-        color: 'from-orange-400 to-red-600',
-        earned: highScores.length >= 5,
-      },
-    ];
+  // 格式化时间
+  const formatDate = (timestamp: number) => {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
   };
-
-  const achievements = calculateAchievements();
-  const earnedCount = achievements.filter(a => a.earned).length;
-  const totalCount = achievements.length;
-  const progress = Math.round((earnedCount / totalCount) * 100);
 
   if (!user) {
     return (
@@ -109,96 +50,102 @@ export function Achievements() {
     );
   }
 
+  const earnedCount = earnedAchievements?.length || 0;
+
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      {/* 标题和进度 */}
+      {/* 标题和计数 */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Award className="w-6 h-6 text-purple-600" />
-          <h2 className="text-lg font-semibold text-gray-800">Achievements</h2>
+          <h2 className="text-lg font-semibold text-gray-800">My Achievements</h2>
         </div>
         <div className="text-right">
-          <p className="text-2xl font-bold text-purple-600">
-            {earnedCount}/{totalCount}
-          </p>
-          <p className="text-xs text-gray-500">{progress}% Complete</p>
+          <p className="text-2xl font-bold text-purple-600">{earnedCount}</p>
+          <p className="text-xs text-gray-500">Earned</p>
         </div>
       </div>
 
-      {/* 进度条 */}
-      <div className="mb-6">
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div
-            className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-500"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
+      {/* 成就网格 */}
+      {earnedCount > 0 ? (
+        <div className="grid grid-cols-3 gap-4">
+          {earnedAchievements?.map((achievement) => {
+            const template = achievement.template;
+            if (!template) return null;
 
-      {/* 徽章网格 */}
-      <div className="grid grid-cols-3 gap-4">
-        {achievements.map((achievement) => {
-          const Icon = achievement.icon;
-          const isHovered = hoveredBadge === achievement.id;
+            const Icon = ICON_MAP[template.icon] || Star;
+            const isHovered = hoveredBadge === achievement._id;
 
-          return (
-            <div
-              key={achievement.id}
-              className="relative group"
-              onMouseEnter={() => setHoveredBadge(achievement.id)}
-              onMouseLeave={() => setHoveredBadge(null)}
-            >
-              {/* 徽章图标 */}
+            return (
               <div
-                className={`
-                  aspect-square rounded-xl flex items-center justify-center
-                  transition-all duration-300 cursor-pointer
-                  ${achievement.earned
-                  ? `bg-gradient-to-br ${achievement.color} shadow-lg hover:scale-110`
-                  : 'bg-gray-200 grayscale opacity-40 hover:opacity-60'
-                }
-                `}
+                key={achievement._id}
+                className="relative group"
+                onMouseEnter={() => setHoveredBadge(achievement._id)}
+                onMouseLeave={() => setHoveredBadge(null)}
               >
-                <Icon
-                  className={`w-8 h-8 ${
-                    achievement.earned ? 'text-white' : 'text-gray-400'
-                  }`}
-                />
-              </div>
-
-              {/* Hover 详情卡片 */}
-              {isHovered && (
-                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-48 p-3 bg-gray-900 text-white rounded-lg shadow-xl z-10">
-                  <div className="text-center">
-                    <p className="font-semibold text-sm mb-1">
-                      {achievement.name}
-                    </p>
-                    <p className="text-xs text-gray-300 mb-2">
-                      {achievement.description}
-                    </p>
-                    {achievement.earned ? (
-                      <div className="flex items-center justify-center gap-1 text-xs text-green-400">
-                        <CheckCircle className="w-3 h-3" />
-                        <span>Earned!</span>
-                      </div>
-                    ) : (
-                      <p className="text-xs text-gray-400">Not earned yet</p>
-                    )}
-                  </div>
-                  {/* 小三角 */}
-                  <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900" />
+                {/* 徽章图标 */}
+                <div
+                  className="aspect-square rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer shadow-lg hover:scale-110"
+                  style={{ backgroundColor: template.color + '20' }}
+                >
+                  <Icon
+                    className="w-8 h-8"
+                    color={template.color}
+                  />
                 </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
 
-      {/* 空状态提示 */}
-      {earnedCount === 0 && (
-        <div className="mt-4 text-center">
+                {/* Hover 详情卡片 */}
+                {isHovered && (
+                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-4 bg-gray-900 text-white rounded-lg shadow-xl z-10">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon
+                          className="w-5 h-5"
+                          color={template.color}
+                        />
+                        <p className="font-semibold text-sm">{template.name}</p>
+                      </div>
+                      <p className="text-xs text-gray-300 mb-2">
+                        {template.description}
+                      </p>
+                      {achievement.customMessage && (
+                        <div className="mt-3 pt-3 border-t border-gray-700">
+                          <p className="text-xs text-gray-400 mb-1">Message:</p>
+                          <p className="text-xs text-gray-200 italic">
+                            &ldquo;{achievement.customMessage}&rdquo;
+                          </p>
+                        </div>
+                      )}
+                      <p className="text-xs text-gray-500 mt-3">
+                        Earned: {formatDate(achievement.awardedAt)}
+                      </p>
+                    </div>
+                    {/* 小三角 */}
+                    <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900" />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* 空状态 */
+        <div className="text-center py-8">
+          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+            <Lock className="w-10 h-10 text-gray-400" />
+          </div>
+          <p className="text-gray-600 font-medium mb-1">No achievements yet</p>
           <p className="text-sm text-gray-500">
-            Complete assignments to unlock achievements! 🎯
+            Keep working hard! Your teacher will award you achievements for your efforts. 🌟
+          </p>
+        </div>
+      )}
+
+      {/* 鼓励信息 */}
+      {earnedCount > 0 && earnedCount < 5 && (
+        <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+          <p className="text-xs text-purple-700 text-center">
+            Keep up the great work! More achievements are waiting for you! 🎯
           </p>
         </div>
       )}

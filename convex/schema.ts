@@ -138,4 +138,28 @@ export default defineSchema({
     location: v.optional(v.string()),     // "Room 101" 或 "Lab A"
     createdAt: v.number(),
   }).index('by_classroom', ['classroomId']),
+
+  // 成就模板表
+  achievementTemplates: defineTable({
+    teacherId: v.string(),
+    name: v.string(),
+    description: v.string(),
+    icon: v.string(),
+    color: v.string(),
+    category: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index('by_teacher', ['teacherId']),
+
+  // 学生成就表
+  studentAchievements: defineTable({
+    studentId: v.string(),
+    achievementTemplateId: v.id('achievementTemplates'),
+    awardedBy: v.string(),
+    awardedAt: v.number(),
+    customMessage: v.optional(v.string()),
+    classroomId: v.optional(v.id('classrooms')),
+  })
+    .index('by_student', ['studentId'])  // ← 必需！
+    .index('by_student_and_achievement', ['studentId', 'achievementTemplateId']),
 });
