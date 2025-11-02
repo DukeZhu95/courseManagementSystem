@@ -18,7 +18,6 @@ import { CustomUserMenu } from '@/app/dashboard/student/custom-user-menu';
 import { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { CurrentTasks } from './current-tasks';
-import { Achievements } from './Achievements';
 import { Id } from '../../../../convex/_generated/dataModel';
 
 // ✅ 定义类型

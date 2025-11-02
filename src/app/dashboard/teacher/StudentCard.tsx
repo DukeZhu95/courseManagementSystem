@@ -55,7 +55,7 @@ export function StudentCard({ studentId, joinedAt, classes, index }: StudentCard
   const studentEmail = profile?.email || `${studentId.slice(0, 12)}@student.edu`;
 
   // 安全获取头像
-  const avatarUrl = (profile as any)?.avatar;
+  const avatarUrl = (profile as { avatar?: string })?.avatar;
 
   return (
     <>
