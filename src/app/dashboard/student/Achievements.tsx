@@ -4,6 +4,7 @@ import { useQuery } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
 import { useUser } from '@clerk/nextjs';
 import { Award, Star, Trophy, Award as Medal, Zap, Heart, BookOpen, Lock, User, GraduationCap } from 'lucide-react';
+import { Id } from '../../../../convex/_generated/dataModel';
 
 // 图标映射
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string; size?: number }>> = {
@@ -215,7 +216,7 @@ function TeacherName({ teacherId }: { teacherId: string }) {
 // 获取课程名称的子组件
 function ClassName({ classroomId }: { classroomId: string }) {
   const classroom = useQuery(api.classes.getClassroom, {
-    classroomId: classroomId as any
+    classroomId: classroomId as Id<'classrooms'>
   });
 
   if (!classroom) return <span className="text-gray-400">Loading...</span>;
