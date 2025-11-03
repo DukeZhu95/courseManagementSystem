@@ -52,6 +52,19 @@ export default function StudentDashboard() {
     user?.id ? { studentId: user.id } : 'skip'
   );
 
+  const earnedAchievements = useQuery(
+    api.achievements.getStudentAchievements,
+    user?.id ? { studentId: user.id } : 'skip'
+  );
+
+  const hasNewAchievements = earnedAchievements?.some(
+    a => a.awardedAt > Date.now() - 24 * 60 * 60 * 1000
+  ) || false;
+
+  const newAchievementsCount = earnedAchievements?.filter(
+    a => a.awardedAt > Date.now() - 24 * 60 * 60 * 1000
+  ).length || 0;
+
   const schedules = useQuery(
     api.classroomSchedules.getStudentSchedules,
     user?.id ? { studentId: user.id } : 'skip'
@@ -66,7 +79,17 @@ export default function StudentDashboard() {
     ? `${profile.firstName}${profile.lastName ? ' ' + profile.lastName : ''}`
     : user?.firstName || 'Student';
 
-  // ✅ 计算课程表信息 - 显示"星期几 + 课程名"
+  const needsProfileUpdate = !profile?.firstName || !profile?.lastName;
+
+  const profileCompleteness = (() => {
+    if (!profile) return 0;
+    let score = 0;
+    if (profile.firstName) score += 33;
+    if (profile.lastName) score += 33;
+    if (profile.email) score += 34;
+    return score;
+  })();
+
   const getTimetableInfo = () => {
     if (!schedules || schedules.length === 0 || !classrooms || classrooms.length === 0) {
       return {
@@ -205,6 +228,55 @@ export default function StudentDashboard() {
                   <p className="glass-student-nav-subtitle">Learning Management Portal</p>
                 </div>
               </div>
+
+              {/* 完善信息提示 - 在导航栏内 */}
+              {needsProfileUpdate && (
+                <div className="ml-auto mr-12 relative">
+                  <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-400 rounded-xl p-4 shadow-lg animate-pulse">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-bold text-gray-900 mb-1">
+                          UPDATE PROFILE
+                        </h3>
+                        <p className="text-xs text-gray-700 mb-2">
+                          Click your avatar to update your real name
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-gray-600">
+                          <div className="w-full bg-gray-200 rounded-full h-1.5">
+                            <div
+                              className="bg-gradient-to-r from-yellow-500 to-orange-500 h-1.5 rounded-full"
+                              style={{ width: `${profileCompleteness}%` }}
+                            />
+                          </div>
+                          <span className="font-semibold whitespace-nowrap">{profileCompleteness}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 箭头指向头像 */}
+                  <div className="absolute -right-10 top-1/2 transform -translate-y-1/2">
+                    <div className="relative">
+                      {/* 动画箭头 */}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-8 w-8 text-yellow-500 animate-bounce-horizontal"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="glass-student-user-section">
                 <CustomUserMenu
                   afterSignOutUrl="/auth/sign-in"
@@ -262,12 +334,29 @@ export default function StudentDashboard() {
               </div>
             </div>
 
-            {/* ✅ 替换：GRADE → ACHIEVEMENTS */}
+            {/* ACHIEVEMENTS */}
             <div
               className="glass-student-stat-mini glass-student-stat-3"
               onClick={viewAchievements}
-              style={{ cursor: 'pointer' }}
+              style={{ cursor: 'pointer', position: 'relative' }}
             >
+              {/* 新成就通知徽章 */}
+              {hasNewAchievements && (
+                <>
+                  {/* 脉动红点 */}
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 z-10">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+        <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 items-center justify-center text-white text-xs font-bold">
+          {newAchievementsCount}
+        </span>
+      </span>
+                  {/* NEW 标签 */}
+                  <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-lg animate-pulse whitespace-nowrap">
+                    {newAchievementsCount} New!
+                  </div>
+                </>
+              )}
+
               <div className="glass-student-stat-mini-icon">
                 <Award size={24} strokeWidth={2} />
               </div>

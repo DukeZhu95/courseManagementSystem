@@ -73,6 +73,19 @@
     }
 }
 
+@keyframes bounce-horizontal {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    50% {
+        transform: translateX(8px);
+    }
+}
+
+.animate-bounce-horizontal {
+    animation: bounce-horizontal 1s ease-in-out infinite;
+}
+
 /* 导航栏 - 固定在顶部 */
 .glass-student-nav {
     position: fixed;

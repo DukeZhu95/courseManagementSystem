@@ -224,3 +224,13 @@ export const getStudentClassrooms = query({
     );
   },
 });
+
+// 获取单个课程信息
+export const getClassroom = query({
+  args: {
+    classroomId: v.id('classrooms'),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.classroomId);
+  },
+});
