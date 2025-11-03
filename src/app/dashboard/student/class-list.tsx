@@ -11,7 +11,7 @@ import {
 } from '@/app/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { formatDate } from '@/lib/utils';
-import { BookOpen, Calendar, Hash } from 'lucide-react';
+import { BookOpen, Calendar, Hash, ChevronRight } from 'lucide-react';
 
 // 渐变色方案 - 每个课程卡片使用不同的渐变
 const gradients = [
@@ -44,10 +44,10 @@ export function StudentClassList() {
 
   if (!classes) {
     return (
-      <div className="space-y-4">
-        {[1, 2].map((n) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[1, 2, 3].map((n) => (
           <div key={n} className="animate-pulse">
-            <div className="h-32 bg-gray-100 rounded-lg" />
+            <div className="h-64 bg-gray-100 rounded-2xl" />
           </div>
         ))}
       </div>
@@ -68,7 +68,7 @@ export function StudentClassList() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       {classes.map((classroom, index) => (
         <div
           key={classroom._id}
@@ -82,9 +82,10 @@ export function StudentClassList() {
             overflow: 'hidden',
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             boxShadow: '0 8px 20px rgba(0, 0, 0, 0.08)',
+            height: 'fit-content',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-4px) scale(1.01)';
+            e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
             e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.15)';
           }}
           onMouseLeave={(e) => {
@@ -117,10 +118,10 @@ export function StudentClassList() {
           <div
             style={{
               position: 'absolute',
-              top: '-20px',
-              right: '-20px',
-              width: '150px',
-              height: '150px',
+              top: '-40px',
+              right: '-40px',
+              width: '120px',
+              height: '120px',
               background: 'rgba(255, 255, 255, 0.1)',
               borderRadius: '50%',
               filter: 'blur(40px)',
@@ -136,32 +137,39 @@ export function StudentClassList() {
               boxShadow: 'none',
             }}
           >
-            <CardHeader>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <CardHeader style={{ paddingBottom: '0.75rem' }}>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '1rem',
+                textAlign: 'center'
+              }}>
                 {/* 课程图标 */}
                 <div
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    width: '56px',
-                    height: '56px',
+                    width: '64px',
+                    height: '64px',
                     background: 'rgba(255, 255, 255, 0.25)',
                     backdropFilter: 'blur(10px)',
-                    borderRadius: '16px',
+                    borderRadius: '20px',
                     border: '1px solid rgba(255, 255, 255, 0.3)',
                   }}
                 >
-                  <BookOpen size={28} color="white" strokeWidth={2} />
+                  <BookOpen size={32} color="white" strokeWidth={2} />
                 </div>
 
                 {/* 课程标题 */}
                 <CardTitle
                   style={{
                     color: 'white',
-                    fontSize: '1.5rem',
+                    fontSize: '1.25rem',
                     fontWeight: '700',
                     textShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                    lineHeight: '1.4',
                   }}
                 >
                   {classroom.name || `Class ${classroom.code}`}
@@ -169,31 +177,42 @@ export function StudentClassList() {
               </div>
             </CardHeader>
 
-            <CardContent>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <CardContent style={{ paddingTop: '0.75rem' }}>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.75rem',
+                marginBottom: '1rem'
+              }}>
                 {/* 课程代码 */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  justifyContent: 'center'
+                }}>
                   <div
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      width: '32px',
-                      height: '32px',
+                      width: '28px',
+                      height: '28px',
                       background: 'rgba(255, 255, 255, 0.2)',
                       borderRadius: '8px',
                     }}
                   >
-                    <Hash size={16} color="white" />
+                    <Hash size={14} color="white" />
                   </div>
                   <p
                     style={{
-                      fontSize: '0.95rem',
+                      fontSize: '0.875rem',
                       color: 'rgba(255, 255, 255, 0.95)',
                       fontWeight: '600',
+                      fontFamily: 'monospace',
                     }}
                   >
-                    Code: {classroom.code}
+                    {classroom.code}
                   </p>
                 </div>
 
@@ -203,33 +222,61 @@ export function StudentClassList() {
                     student.studentId === user?.id && (
                       <div
                         key={student.studentId}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          justifyContent: 'center'
+                        }}
                       >
                         <div
                           style={{
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            width: '32px',
-                            height: '32px',
+                            width: '28px',
+                            height: '28px',
                             background: 'rgba(255, 255, 255, 0.2)',
                             borderRadius: '8px',
                           }}
                         >
-                          <Calendar size={16} color="white" />
+                          <Calendar size={14} color="white" />
                         </div>
                         <p
                           style={{
-                            fontSize: '0.9rem',
+                            fontSize: '0.8rem',
                             color: 'rgba(255, 255, 255, 0.9)',
                             fontWeight: '500',
                           }}
                         >
-                          Joined: {formatDate(student.joinedAt)}
+                          {formatDate(student.joinedAt)}
                         </p>
                       </div>
                     )
                 )}
+              </div>
+
+              {/* 查看详情按钮 */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  paddingTop: '1rem',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.2)',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '0.875rem',
+                    color: 'white',
+                    fontWeight: '600',
+                  }}
+                >
+                  View Details
+                </span>
+                <ChevronRight size={16} color="white" />
               </div>
             </CardContent>
           </Card>
