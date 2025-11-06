@@ -71,7 +71,7 @@ export function StudentProfileEditor({ isOpen, onClose }: ProfileEditorProps) {
       setFormData(data);
       setOriginalData(data);
       setAvatarPreview(profile.avatar || null);
-      setHasChanges(false); // 重置修改状态
+      setHasChanges(false);
     }
   }, [profile, isOpen]);
 
@@ -369,9 +369,12 @@ export function StudentProfileEditor({ isOpen, onClose }: ProfileEditorProps) {
               className="profile-editor-select"
             >
               <option value="">-- Please select --</option>
-              <option value="Guitar">Guitar</option>
+              <option value="Guitar(Classical)">Guitar(Classical)</option>
+              <option value="Guitar(Acoustic)">Guitar(Acoustic)</option>
+              <option value="Guitar(Electric)">Guitar(Electric)</option>
+              <option value="Bass">Bass</option>
               <option value="Ukulele">Ukulele</option>
-              <option value="Music Theory">Music Theory</option>
+              <option value="Keyboard">Piano</option>
               <option value="Others">Other</option>
             </select>
             <small>Select your field of study</small>
