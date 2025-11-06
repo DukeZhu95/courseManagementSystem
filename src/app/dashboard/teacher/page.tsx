@@ -184,7 +184,19 @@ export default function TeacherDashboard() {
             <div className="glass-stat-content">
               <p className="glass-stat-label">Total Students</p>
               <p className="glass-stat-value">
-                {classes?.reduce((sum, c) => sum + c.students.length, 0) || 0}
+                {(() => {
+                  if (!classes || classes.length === 0) return 0;
+
+                  // 收集所有学生ID并去重
+                  const uniqueStudentIds = new Set<string>();
+                  classes.forEach(classItem => {
+                    classItem.students.forEach(student => {
+                      uniqueStudentIds.add(student.studentId);
+                    });
+                  });
+
+                  return uniqueStudentIds.size;
+                })()}
               </p>
               <div className="glass-stat-trend">
                 <Award size={16} />
