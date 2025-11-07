@@ -3,6 +3,7 @@
 import { useUser } from '@clerk/nextjs';
 import { useQuery } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
+import { Id } from '../../../../convex/_generated/dataModel';
 import { Clock, Users, CheckCircle2, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -18,7 +19,11 @@ interface Task {
   }>;
 }
 
-export function TasksTracking() {
+interface TasksTrackingProps {
+  onTaskClick?: (taskId: Id<'tasks'>) => void;
+}
+
+export function TasksTracking({ onTaskClick }: TasksTrackingProps) {
   const { user } = useUser();
 
   // 获取教师的所有课程
@@ -105,6 +110,8 @@ export function TasksTracking() {
             }
               hover:shadow-md cursor-pointer
             `}
+            onClick={() => onTaskClick?.(task._id as Id<'tasks'>)}
+            style={{ cursor: onTaskClick ? 'pointer' : 'default' }}
           >
             {/* 任务标题和状态 */}
             <div className="flex items-start justify-between mb-3">

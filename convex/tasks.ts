@@ -164,10 +164,38 @@ export const getTaskSubmissions = query({
     }
 
     // 获取所有提交
-    return await ctx.db
+    const submissions = await ctx.db
       .query('taskSubmissions')
       .withIndex('by_task', (q) => q.eq('taskId', args.taskId))
       .collect();
+
+    // 获取每个学生的profile信息
+    const submissionsWithStudentInfo = await Promise.all(
+      submissions.map(async (submission) => {
+        const profile = await ctx.db
+          .query('studentProfiles')
+          .withIndex('by_student_id', (q) => q.eq('studentId', submission.studentId))
+          .first();
+
+        // 构建附件信息
+        const files = submission.storageId && submission.attachmentName
+          ? [{
+            name: submission.attachmentName,
+            url: submission.attachmentUrl || '',
+          }]
+          : [];
+
+        return {
+          ...submission,
+          studentName: profile?.firstName
+            ? `${profile.firstName} ${profile.lastName || ''}`
+            : submission.studentId.slice(0, 12),
+          files,
+        };
+      })
+    );
+
+    return submissionsWithStudentInfo;
   },
 });
 
@@ -461,6 +489,9 @@ export const getTaskById = query({
       return null;
     }
 
+    // 获取课程信息
+    const classroom = await ctx.db.get(task.classroomId);
+
     // 获取所有附件的 URLs
     const attachmentUrls = task.storageIds
       ? await Promise.all(
@@ -472,7 +503,44 @@ export const getTaskById = query({
 
     return {
       ...task,
+      className: classroom?.name || 'Unknown Class',
+      classCode: classroom?.code || 'N/A',
       attachmentUrls, // 添加 URLs 到返回对象
     };
+  },
+});
+
+// 批改任务提交
+export const gradeSubmission = mutation({
+  args: {
+    submissionId: v.id('taskSubmissions'),
+    feedback: v.string(),
+    score: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error('Not authenticated');
+
+    const { submissionId, feedback, score } = args;
+
+    // 获取提交记录
+    const submission = await ctx.db.get(submissionId);
+    if (!submission) throw new Error('Submission not found');
+
+    // 获取任务信息以验证教师权限
+    const task = await ctx.db.get(submission.taskId);
+    if (!task || task.teacherId !== identity.subject) {
+      throw new Error('Not authorized to grade this submission');
+    }
+
+    // 更新提交状态
+    await ctx.db.patch(submissionId, {
+      status: 'graded',
+      feedback,
+      grade: score,
+      gradedAt: Date.now(),
+    });
+
+    return { success: true };
   },
 });

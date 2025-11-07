@@ -10,6 +10,9 @@ import '@/styles/components/teacher-dashboard-glass.css';
 import { Toaster } from 'react-hot-toast';
 import { CustomUserMenu } from '@/app/dashboard/teacher/custom-user-menu';
 import { TodaySchedule } from './Todayschedule';
+import { TaskReviewModal } from './TaskReviewModal';
+import { useState } from 'react';
+import { Id } from '../../../../convex/_generated/dataModel';
 import {
   GraduationCap,
   Users,
@@ -25,6 +28,14 @@ import {
 export default function TeacherDashboard() {
   const { user } = useUser();
   const router = useRouter();
+
+  const [selectedTaskId, setSelectedTaskId] = useState<Id<'tasks'> | null>(null);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
+  const handleTaskClick = (taskId: Id<'tasks'>) => {
+    setSelectedTaskId(taskId);
+    setIsReviewModalOpen(true);
+  };
 
   const classes = useQuery(api.classes.getTeacherClasses, {
     teacherId: user?.id || '',
@@ -284,7 +295,7 @@ export default function TeacherDashboard() {
               </div>
             </div>
             <div className="glass-tasks-wrapper">
-              <TasksTracking />
+              <TasksTracking onTaskClick={handleTaskClick} />
             </div>
           </section>
         </div>
@@ -339,6 +350,17 @@ export default function TeacherDashboard() {
           },
         }}
       />
+
+      {selectedTaskId && (
+        <TaskReviewModal
+          taskId={selectedTaskId}
+          isOpen={isReviewModalOpen}
+          onClose={() => {
+            setIsReviewModalOpen(false);
+            setSelectedTaskId(null);
+          }}
+        />
+      )}
     </div>
   );
 }
