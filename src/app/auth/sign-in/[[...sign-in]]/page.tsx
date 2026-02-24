@@ -192,7 +192,7 @@ export default function SignInPage() {
         />
 
         <div className="auth-brand-logo">
-          <span>Course Management</span>
+          <span>LessonHub</span>
         </div>
 
         <div className="auth-clerk-wrapper">
